@@ -199,6 +199,7 @@ db.orders.deleteOne({ order_id: "ORD123456" });
 -- Part 2: Aggregation Pipeline
 
 -- Calculate Total Value of All Orders by Customer
+
 db.orders.aggregate([
   { $group: { _id: "$customer_id", totalSpent: { $sum: "$total_value" } } },
   { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "customerDetails" } },
@@ -207,11 +208,13 @@ db.orders.aggregate([
 ]);
 
 -- Group Orders by Status
+
 db.orders.aggregate([
   { $group: { _id: "$status", count: { $sum: 1 } } }
 ]);
 
 --List Customers with Their Recent Orders
+
 db.orders.aggregate([
   { $sort: { order_date: -1 } },
   { $group: { _id: "$customer_id", latestOrder: { $first: "$$ROOT" } } },
@@ -222,6 +225,7 @@ db.orders.aggregate([
 
 
 -- Find the Most Expensive Order by Customer
+
 db.orders.aggregate([
   { $sort: { total_value: -1 } },
   { $group: { _id: "$customer_id", mostExpensiveOrder: { $first: "$$ROOT" } } },
@@ -234,6 +238,7 @@ db.orders.aggregate([
 -- Part 3: Real-World Scenario with Relationships
 
 --Find All Customers Who Placed Orders in the Last Month
+
 db.orders.aggregate([
   { $match: { order_date: { $gte: new Date(new Date() - 30 * 24 * 60 * 60 * 1000) } } },
   { $lookup: { from: "customers", localField: "customer_id", foreignField: "_id", as: "customerDetails" } },
@@ -243,6 +248,7 @@ db.orders.aggregate([
 
 
 --Find All Products Ordered by a Specific Customer
+
 const customer = db.customers.findOne({ name: "John Doe" });
 db.orders.aggregate([
   { $match: { customer_id: customer._id } },
@@ -252,6 +258,7 @@ db.orders.aggregate([
 
 
 --Find the Top 3 Customers with the Most Expensive Total Orders
+
 db.orders.aggregate([
   { $group: { _id: "$customer_id", totalSpent: { $sum: "$total_value" } } },
   { $sort: { totalSpent: -1 } },
@@ -263,6 +270,7 @@ db.orders.aggregate([
 
 
 --Add a New Order for an Existing Customer
+
 const customer = db.customers.findOne({ name: "Jane Smith" });
 db.orders.insertOne({
   order_id: "ORD123789",
@@ -277,6 +285,7 @@ db.orders.insertOne({
 --Part 4: Bonus Challenge
 
 --Find Customers Who Have Not Placed Orders
+
 db.customers.aggregate([
   { $lookup: { from: "orders", localField: "_id", foreignField: "customer_id", as: "orders" } },
   { $match: { orders: { $size: 0 } } },
@@ -284,6 +293,7 @@ db.customers.aggregate([
 ]);
 
 --Calculate the Average Number of Items Ordered per Order
+
 db.orders.aggregate([
   { $unwind: "$items" },
   { $group: { _id: "$_id", itemCount: { $sum: "$items.quantity" } } },
@@ -292,6 +302,7 @@ db.orders.aggregate([
 
 
 --Join Customer and Order Data Using $lookup
+
 db.customers.aggregate([
   { $lookup: { from: "orders", localField: "_id", foreignField: "customer_id", as: "orders" } },
   { $unwind: "$orders" },
